@@ -2,10 +2,6 @@
 // Settings
 // --------
 // custome data module id
-
-const float CONFIG_TURRET_SENSITIVE_HORIZONTAL = 3.0f;
-const float CONFIG_TURRET_SENSITIVE_VERTICAL   = -0.5f;
-
 const string CUSTOM_DATA_ID_MODULE = "Maneuver";
 
 const string CUSTOM_DATA_ID_HEADLIGHT = "HeadLight";
