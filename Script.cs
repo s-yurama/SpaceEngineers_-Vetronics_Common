@@ -12,9 +12,6 @@ const string CUSTOM_DATA_ID_HEADLIGHT = "HeadLight";
 const string CUSTOM_DATA_ID_WINKER    = "Winker";
 const string CUSTOM_DATA_ID_TAILLIGHT = "TailLight";
 
-const string CUSTOM_DATA_ID_TURRET_HORIZONTAL = "turretHorizontal";
-const string CUSTOM_DATA_ID_TURRET_VERTICAL   = "turretVertical";
-
 // --------
 // Messages
 // --------
@@ -132,9 +129,6 @@ private void procedure()
     chassis.setCockpit(blocks.getCockpit());
 
     maneuverControl();
-    fireControl();
-    //damageControl();
-    //ECM();
 }
 
 /**
@@ -146,32 +140,6 @@ private void maneuverControl()
     
     tailLight();
     winker();
-}
-
-/**
- * FCS
- */
-private void fireControl()
-{
-    float rpm; 
-
-    if ( chassis.Pitch < 0.05f && chassis.Pitch > -0.05f) {
-        rpm = 0.0f;
-    } else {
-        rpm = chassis.Pitch * CONFIG_TURRET_SENSITIVE_VERTICAL;
-    }
-    foreach ( IMyMotorStator rotorTurretVertical in blocks.rotorTurretVertical ) {
-        rotorTurretVertical.TargetVelocityRPM = rpm;  //.TargetVelocityRad
-    }
-
-    if ( chassis.Yaw < 0.05f && chassis.Yaw > -0.05f) {
-        rpm = 0.0f;
-    } else {
-        rpm = chassis.Yaw * CONFIG_TURRET_SENSITIVE_HORIZONTAL;
-    }
-    foreach ( IMyMotorStator rotorTurretHorizontal in blocks.rotorTurretHorizontal ) {
-        rotorTurretHorizontal.TargetVelocityRPM = rpm;  //.TargetVelocityRad
-    }
 }
 
 /* 
@@ -299,9 +267,6 @@ private class Blocks
     public List<IMyLightingBlock> leftWinkerList;
     public List<IMyLightingBlock> rightWinkerList;
 
-    public List<IMyMotorStator> rotorTurretHorizontal;
-    public List<IMyMotorStator> rotorTurretVertical;
-
     public bool isUnderControl = false;
 
     // default constructor
@@ -321,9 +286,6 @@ private class Blocks
         this.tailLightList   = new List<IMyLightingBlock>();
         this.leftWinkerList  = new List<IMyLightingBlock>();
         this.rightWinkerList = new List<IMyLightingBlock>();
-
-        this.rotorTurretHorizontal = new List<IMyMotorStator>();
-        this.rotorTurretVertical   = new List<IMyMotorStator>();
 
         this.error.clear();
 
@@ -413,9 +375,6 @@ private class Blocks
         this.tailLightList.Clear();
         this.leftWinkerList.Clear();
         this.rightWinkerList.Clear();
-
-        this.rotorTurretHorizontal.Clear();
-        this.rotorTurretVertical.Clear();
     }
 
     private void assign()
@@ -460,17 +419,6 @@ private class Blocks
                 } else {
                     leftWinkerList.Add(light);
                 }
-                continue;
-            }
-        }
-
-        foreach ( IMyMotorStator rotor in rotorList ) {
-            if ( rotor.CustomData.Contains(CUSTOM_DATA_ID_TURRET_HORIZONTAL) ) {
-                rotorTurretHorizontal.Add(rotor);
-                continue;
-            }
-            if ( rotor.CustomData.Contains(CUSTOM_DATA_ID_TURRET_VERTICAL) ) {
-                rotorTurretVertical.Add(rotor);
                 continue;
             }
         }
