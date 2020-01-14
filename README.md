@@ -1,2 +1,37 @@
-# SpaceEngineers_-Vetronics_Common
-SpaceEngineers in-game script. common vetronics.
+# SpaceEngineers Common Vetronics 
+SpaceEngineers in-game script. common vetronics.  
+This is for common vehicle script.
+
+# License
+
+MIT License. you can use and pusblish with your vehicles.
+
+# Features
+
+- **Winker Control**  
+When you turning left or right, then flush the winkers.
+- **Tail lamp control**  
+When you braking vehicle(pushing space), then light up tail lamps.
+and night, then keeping light up while not braking and up intensity while braking.
+
+# Installation
+
+## check the game settings
+
+please find "In-game script" in "advanced" settings menu and it should be checked.
+
+## write custom datas
+
+please write some ids to custom datas in follow blocks.
+This is necessary for programmable block know which light should be Winkers/Tail lamps.
+
+|Block|Custom Data|
+|---|---|
+|Cockpit|[Maneuver]|
+|any light for winker|[Maneuver][Winker]|
+|any light for tail lamp|[Maneuver][TailLight]|
+
+# Examples
+
+<a href="https://steamcommunity.com/sharedfiles/filedetails/?id=1965652468">LCX-3P Luna Supply Vehicle<br/>
+<img src="https://user-images.githubusercontent.com/48115430/72358964-c61d7a80-3730-11ea-836c-ff638cc5097a.png" width="50%"/></a>
