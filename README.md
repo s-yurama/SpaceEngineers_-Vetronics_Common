@@ -11,7 +11,7 @@ MIT License. you can use and pusblish with your vehicles.
 - **Winker Control**  
 When you turning left or right, then flush the winkers.
 - **Tail lamp control**  
-When you braking vehicle(pushing space), then light up tail lamps.
+When you braking vehicle(pushing space), then light up tail lamps.  
 and night, then keeping light up while not braking and up intensity while braking.
 
 # Installation
@@ -22,7 +22,7 @@ please find "In-game script" in "advanced" settings menu and it should be checke
 
 ## write custom datas
 
-please write some ids to custom datas in follow blocks.
+please write some ids to custom datas in follow blocks.  
 This is necessary for programmable block know which light should be Winkers/Tail lamps.
 
 |Block|Custom Data|
