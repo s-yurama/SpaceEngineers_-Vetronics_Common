@@ -51,6 +51,10 @@ public Program()
 
     updateTimer = UPDATE_INTERVAL;
     Runtime.UpdateFrequency = UpdateFrequency.Update1;
+
+    error = new ErrorHandler(this);
+    blocks = new Blocks(GridTerminalSystem, Me.CubeGrid, error);
+    chassis = new Chassis();
 }
 
 public void Save()
@@ -72,10 +76,6 @@ public void Main(string argument, UpdateType updateSource)
     // 
     // The method itself is required, but the arguments above
     // can be removed if not needed.
-
-    if ( error == null ) {
-        error = new ErrorHandler(this);
-    }
 
     checkUpdateType(updateSource);
 
@@ -112,81 +112,20 @@ private void procedure()
         updateTimer = 0;
         Echo("updating...");
 
-        blocks = new Blocks(GridTerminalSystem, Me.CubeGrid, error);
+        blocks.init();
+
+        chassis.setController(blocks.getController());
+        chassis.HeadLights   = blocks.HeadLights;
+        chassis.TailLights   = blocks.TailLights;
+        chassis.LeftWinkers  = blocks.LeftWinkers;
+        chassis.RightWinkers = blocks.RightWinkers;
     }
 
     if( error.isExists() ) {
         return;
     }
-
-    if ( chassis == null ) {
-        chassis = new Chassis();
-    }
-    chassis.setCockpit(blocks.getCockpit());
-
-    maneuverControl();
-}
-
-/**
- * maneuvering control
- */ 
-private void maneuverControl()
-{   
-    //double velocity = chassis.getVelocity();
     
-    tailLight();
-    winker();
-}
-
-/* 
- *  module: tail light controller
- */
-private void tailLight()
-{
-    foreach ( IMyLightingBlock light in blocks.tailLightList ) {
-        if ( light == null ) { continue; }
-        if ( false
-            || chassis.Up > 0
-            || ( chassis.isHandBraked() && blocks.isUnderControl )
-        ) {
-            light.ApplyAction("OnOff_On");
-            light.Intensity = 7.5f;
-        } else {
-            // if it's night, then up intensity
-            if ( blocks.isHeadLightOn() ) {
-                light.ApplyAction("OnOff_On");
-                light.Intensity = 0.5f;
-            } else {
-                light.ApplyAction("OnOff_Off");
-            }
-        }
-    }
-}
-
-/* 
- *  module: winker controller
- */
-private void winker()
-{
-    // winker left
-    foreach ( IMyLightingBlock light in blocks.rightWinkerList ) {
-        if ( light == null ) { continue; }
-        if ( chassis.Left > 0 ) {
-            light.ApplyAction("OnOff_On");
-        } else {
-            light.ApplyAction("OnOff_Off");
-        }
-    }
-
-    // winker right
-    foreach(IMyLightingBlock light in blocks.leftWinkerList){
-        if ( light == null ) { continue; }
-        if ( chassis.Left < 0 ) {
-            light.ApplyAction("OnOff_On");
-        } else {
-            light.ApplyAction("OnOff_Off");
-        }
-    }
+    chassis.update();
 }
 
 /**
@@ -194,8 +133,13 @@ private void winker()
  */
 private class Chassis
 {
-    // primary ship controller of vessel
+    // primary ship controller(Cockpit/RemoteControl) of vessel
     public IMyShipController primaryController {get; set;}
+
+    public List<IMyLightingBlock> HeadLights {get; set;}
+    public List<IMyLightingBlock> TailLights {get; set;}
+    public List<IMyLightingBlock> LeftWinkers {get; set;}
+    public List<IMyLightingBlock> RightWinkers {get; set;}
 
     // translation speed value
     public float Left    {get; set;}
@@ -207,34 +151,34 @@ private class Chassis
     public float Roll    {get; set;}
     public float Yaw     {get; set;}
     
-    public void setCockpit(IMyShipController Controller)
+    public void setController(IMyShipController Controller)
     {
         this.primaryController = Controller;
-        getControl();
-    }
-    
-    public void getControl()
-    {
-       updateTranslationControl();
-       updateYawPitchRoll();
     }
 
-    public void updateTranslationControl()
+    public void update()
+    {
+       this.updateTranslationControl();
+       this.updateYawPitchRoll();
+       this.updateManeuver();
+    }
+
+    private void updateTranslationControl()
     {
         Vector3 translationVector = this.primaryController.MoveIndicator;
 
-        Left    = translationVector.GetDim(0);
-        Up      = translationVector.GetDim(1);
-        Forward = translationVector.GetDim(2);
+        this.Left    = translationVector.GetDim(0);
+        this.Up      = translationVector.GetDim(1);
+        this.Forward = translationVector.GetDim(2);
     }
 
     public void updateYawPitchRoll()
     {
-        Vector2 yawPitchVector = this.primaryController.RotationIndicator;
+        //Vector2 yawPitchVector = this.primaryController.RotationIndicator;
 
-        Pitch = yawPitchVector.X;                     // turn Up Down
-        Yaw   = yawPitchVector.Y;                     // turn Left Right
-        Roll  = this.primaryController.RollIndicator; // roll
+        //this.Pitch = yawPitchVector.X;                     // turn Up Down
+        //this.Yaw   = yawPitchVector.Y;                     // turn Left Right
+        //this.Roll  = this.primaryController.RollIndicator; // roll
     }
 
     public double getVelocity()
@@ -246,6 +190,78 @@ private class Chassis
     {
         return this.primaryController.HandBrake;
     }
+
+    public bool isHeadLightOn()
+    { 
+        foreach(IMyLightingBlock light in this.HeadLights){
+            if ( light.IsWorking ) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * maneuvering control
+     */ 
+    private void updateManeuver()
+    {   
+        //double velocity = this.getVelocity();
+    
+        this.tailLight();
+        this.winker();
+    }
+
+    /* 
+     *  module: tail light controller
+     */
+    private void tailLight()
+    {
+        foreach ( IMyLightingBlock light in this.TailLights) {
+            if ( light == null ) { continue; }
+            if ( false
+                || this.Up > 0
+                || ( this.isHandBraked() && this.primaryController.IsUnderControl )
+            ) {
+                light.ApplyAction("OnOff_On");
+                light.Intensity = 7.5f;
+            } else {
+                // if it's night, then up intensity
+                if ( this.isHeadLightOn() ) {
+                    light.ApplyAction("OnOff_On");
+                    light.Intensity = 0.5f;
+                } else {
+                    light.ApplyAction("OnOff_Off");
+                }
+            }
+        }
+    }
+
+    /* 
+     *  module: winker controller
+     */
+    private void winker()
+    {
+        // winker left
+        foreach ( IMyLightingBlock light in this.RightWinkers) {
+            if ( light == null ) { continue; }
+            if ( this.Left > 0 ) {
+                light.ApplyAction("OnOff_On");
+            } else {
+                light.ApplyAction("OnOff_Off");
+            }
+        }
+
+        // winker right
+        foreach(IMyLightingBlock light in this.LeftWinkers){
+            if ( light == null ) { continue; }
+            if ( this.Left < 0 ) {
+                light.ApplyAction("OnOff_On");
+            } else {
+                light.ApplyAction("OnOff_Off");
+            }
+        }
+    }
 }
 
 private class Blocks
@@ -256,12 +272,14 @@ private class Blocks
 
     List<IMyTerminalBlock> ownGridBlocksList;
 
-    public List<IMyShipController> cockpitList;
+    private IMyShipController primaryController;
 
-    public List<IMyLightingBlock> headLightList;
-    public List<IMyLightingBlock> tailLightList;
-    public List<IMyLightingBlock> leftWinkerList;
-    public List<IMyLightingBlock> rightWinkerList;
+    public List<IMyShipController> cockpitList= new List<IMyShipController>();
+
+    public List<IMyLightingBlock> HeadLights {get; set;} = new List<IMyLightingBlock>();
+    public List<IMyLightingBlock> TailLights {get; set;} = new List<IMyLightingBlock>();
+    public List<IMyLightingBlock> LeftWinkers {get; set;} = new List<IMyLightingBlock>();
+    public List<IMyLightingBlock> RightWinkers {get; set;} = new List<IMyLightingBlock>();
 
     public bool isUnderControl = false;
 
@@ -276,13 +294,10 @@ private class Blocks
         this.cubeGrid = cubeGrid;
         this.error    = error;
 
-        this.cockpitList     = new List<IMyShipController>();
+        this.init();
+    }
 
-        this.headLightList   = new List<IMyLightingBlock>();
-        this.tailLightList   = new List<IMyLightingBlock>();
-        this.leftWinkerList  = new List<IMyLightingBlock>();
-        this.rightWinkerList = new List<IMyLightingBlock>();
-
+    public void init(){
         this.error.clear();
 
         this.updateOwenedBlocks();
@@ -297,12 +312,17 @@ private class Blocks
         this.assign();
     }
 
-    public IMyShipController getCockpit() {
+    public IMyShipController getController() {
+        if (this.primaryController != null) {
+            return this.primaryController;
+        }
+
         // if exists Undercontrol cockpit, then use it.
         foreach(IMyShipController controller in this.cockpitList){
             if ( controller.IsUnderControl ) {
+                this.primaryController = controller;
                 this.isUnderControl = true;
-                return controller;
+                return this.primaryController;
             }
         }
         this.isUnderControl = false;
@@ -353,42 +373,27 @@ private class Blocks
         return false;
     }
 
-    public bool isHeadLightOn()
-    { 
-        foreach(IMyLightingBlock light in this.headLightList){
-            if ( light.IsWorking ) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     private void clear()
     {
         this.cockpitList.Clear();
 
-        this.headLightList.Clear();
-        this.tailLightList.Clear();
-        this.leftWinkerList.Clear();
-        this.rightWinkerList.Clear();
+        this.HeadLights.Clear();
+        this.TailLights.Clear();
+        this.LeftWinkers.Clear();
+        this.RightWinkers.Clear();
     }
 
     private void assign()
     {
         List<IMyLightingBlock> lightList = new List<IMyLightingBlock>();
-        List<IMyMotorStator>   rotorList = new List<IMyMotorStator>();
 
         foreach ( IMyTerminalBlock block in this.ownGridBlocksList ) {
-            if ( block is IMyShipController && block.CustomData.Contains(CUSTOM_DATA_ID_MODULE) ) {
+            if ( block is IMyShipController && this.isModule(block) ) {
                 this.cockpitList.Add(block as IMyShipController);
                 continue;
             }
-            if ( block is IMyLightingBlock && block.CustomData.Contains(CUSTOM_DATA_ID_MODULE) ) {
+            if ( block is IMyLightingBlock && this.isModule(block) ) {
                 lightList.Add(block as IMyLightingBlock);
-                continue;
-            }
-            if ( block is IMyMotorStator && block.CustomData.Contains(CUSTOM_DATA_ID_MODULE) ) {
-                rotorList.Add(block as IMyMotorStator);
                 continue;
             }
         }
@@ -398,22 +403,22 @@ private class Blocks
             return;
         }
 
-        var centerOfMass = this.getCockpit().CenterOfMass;
+        var centerOfMass = this.getController().CenterOfMass;
 
         foreach ( IMyLightingBlock light in lightList ) {
-            if ( light.CustomData.Contains(CUSTOM_DATA_ID_HEADLIGHT) ) {
-                headLightList.Add(light);
+            if ( this.isHeadLight(light) ) {
+                HeadLights.Add(light);
                 continue;
             }
-            if ( light.CustomData.Contains(CUSTOM_DATA_ID_TAILLIGHT) ) {
-                tailLightList.Add(light);
+            if ( this.isTailLight(light) ) {
+                TailLights.Add(light);
                 continue;
             }
-            if ( light.CustomData.Contains(CUSTOM_DATA_ID_WINKER) ){
+            if ( this.isWinker(light) ){
                 if ( this.cockpitList[0].WorldMatrix.Right.Dot(light.GetPosition() - centerOfMass) > 0 ) {
-                    rightWinkerList.Add(light);
+                    RightWinkers.Add(light);
                 } else {
-                    leftWinkerList.Add(light);
+                    LeftWinkers.Add(light);
                 }
                 continue;
             }
@@ -426,6 +431,38 @@ private class Blocks
             return true;
         }
         return false;
+    }
+
+    private bool isModule(IMyTerminalBlock block){
+        if (block.CustomData.Contains(CUSTOM_DATA_ID_MODULE)){
+            return true;
+        } else {
+            return false;
+        } 
+    }
+
+    private bool isTailLight(IMyTerminalBlock block){
+        if (block.CustomData.Contains(CUSTOM_DATA_ID_TAILLIGHT)) {
+            return true;
+        } else {
+            return false;
+        } 
+    }
+
+    private bool isHeadLight(IMyTerminalBlock block){
+        if (block.CustomData.Contains(CUSTOM_DATA_ID_HEADLIGHT)) {
+            return true;
+        } else {
+            return false;
+        }         
+    }
+
+    private bool isWinker(IMyTerminalBlock block){
+        if (block.CustomData.Contains(CUSTOM_DATA_ID_WINKER)) {
+            return true;
+        } else {
+            return false;
+        }  
     }
 }
 
