@@ -52,6 +52,6 @@ This is necessary for programmable block find which light are Winkers/Tail light
 
 # License
 
-- Script is MIT License. you can use and pusblish with your vehicles.
+- Script is MIT License. you can use and publish with your vehicles.
 - Some trademarks or registered trademarks are the property of their respective owners.
 - Some pictures illustrated by [G.Yamada](http://gkr.skr.jp/)
