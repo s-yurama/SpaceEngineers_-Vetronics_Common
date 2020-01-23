@@ -1,12 +1,14 @@
 # SpaceEngineers Common Vetronics 
-SpaceEngineers in-game script. common vetronics.  
-This is for common vehicle script.
 
-# License
+This is SpaceEngineers in-game script,
+common vetronics for common vehicle.
+<img align="right" src="https://user-images.githubusercontent.com/48115430/72948365-48a8d880-3dc8-11ea-836d-b9ff4d7a5e54.png" alt="Assistant Ms.Theoria"/>
+
+### License
 
 MIT License. you can use and pusblish with your vehicles.
 
-# Features
+### Features
 
 - **Winker Control**  
 When you turning left or right, then flush the winkers.
@@ -34,4 +36,4 @@ This is necessary for programmable block know which light should be Winkers/Tail
 # Examples
 
 <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=1965652468">LCX-3P Luna Supply Vehicle<br/>
-<img src="https://user-images.githubusercontent.com/48115430/72358964-c61d7a80-3730-11ea-836c-ff638cc5097a.png" width="50%"/></a>
+<img src="https://user-images.githubusercontent.com/48115430/72358964-c61d7a80-3730-11ea-836c-ff638cc5097a.png" width="33%"/></a>
