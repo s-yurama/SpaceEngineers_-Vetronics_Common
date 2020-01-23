@@ -21,7 +21,7 @@ please find "In-game script" in "advanced" settings menu and it should be checke
 ## write custom datas
 
 please write some ids to custom datas in follow blocks.  
-This is necessary for programmable block know which light are Winkers/Tail lights.
+This is necessary for programmable block find which light are Winkers/Tail lights.
 
 |Block|Custom Data|
 |---|---|
